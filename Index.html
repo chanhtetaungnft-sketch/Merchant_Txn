@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MMQR Txn Monitoring</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+/* Page background */
+body {
+    font-family: Arial, sans-serif;
+    background: #f8f9fa;
+    padding: 40px;
+}
+
+/* Title */
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Search box */
+#searchBox {
+    display: block;
+    margin: 0 auto 20px auto;
+    padding: 12px;
+    width: 420px;
+    font-size: 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,0.15);
+    background: rgba(255,255,255,0.85);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* CSV Upload - right bottom */
+#csvFile {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.85);
+    border: 1px solid rgba(0,0,0,0.15);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* Container for cards */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* Card common style */
+.card {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(12px);
+    border-radius: 25px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+    overflow-x: auto;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 50px rgba(0,0,0,0.12);
+}
+
+.card h3 {
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    color: #111;
+}
+
+.card p {
+    margin: 6px 0;
+    color: #111;
+    font-size: 15px;
+}
+
+/* Merchant info row */
+.merchant-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Txn months grid */
+.txn-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 15px;
+}
+
+/* Card group inside grid */
+.card-group {
+    margin-bottom: 10px;
+    padding: 15px;
+    background: rgba(255,255,255,0.75);
+    border-radius: 18px;
+    min-width: 280px;
+}
+</style>
+</head>
+<body>
+
+<h1>MMQR Txn Monitoring</h1>
+
+<!-- Search Box -->
+<input type="text" id="searchBox" placeholder="Enter full MID or Merchant Name" onkeyup="searchData()">
+
+<!-- Cards Container -->
+<div class="container">
+    <div id="merchantCardContainer"></div>
+    <div class="txn-grid" id="txnCardsContainer"></div>
+</div>
+
+<!-- CSV Upload -->
+<input type="file" id="csvFile" accept=".csv">
+
+<script>
+let sheetData = [];
+
+// Columns for each card
+const merchantCols = ["Merchant Name","MID","Portal Status","MDR Offus"];
+const card2Cols = ["March Count","March Vol","April Count","April Vol","May Count","May Vol","Jun Count","Jun Vol","July Count","July Vol","Aug Count","Aug Vol","Sept Count","Sept Vol"];
+const card3Cols = ["Oct Count","Oct Vol","Nov Count","Nov Vol","Dec Count","Dec Vol","Jan Count","Jan Vol","Feb Count","Feb Vol","March 26 Count","March 26 Vol"];
+
+// CSV Upload
+document.getElementById("csvFile").addEventListener("change", function(e){
+    const file = e.target.files[0];
+    if(file){
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results){
+                sheetData = results.data;
+                alert("CSV loaded! Now you can search by full MID or Merchant Name.");
+            }
+        });
+    }
+});
+
+// Search function - full match
+function searchData(){
+    const keyword = document.getElementById("searchBox").value.trim().toLowerCase();
+    const merchantContainer = document.getElementById("merchantCardContainer");
+    const txnContainer = document.getElementById("txnCardsContainer");
+    merchantContainer.innerHTML = "";
+    txnContainer.innerHTML = "";
+    if(!keyword) return;
+
+    sheetData.forEach(item => {
+        const MID = (item["MID"] || "").toLowerCase();
+        const merchant = (item["Merchant Name"] || "").toLowerCase();
+
+        if(MID === keyword || merchant === keyword){
+            // Merchant Info Card
+            let merchantCard = `<div class="card merchant-info">`;
+            merchantCols.forEach(col => {
+                merchantCard += `<p><strong>${col}:</strong> ${item[col] || ""}</p>`;
+            });
+            merchantCard += `</div>`;
+            merchantContainer.innerHTML += merchantCard;
+
+            // Txn Card 1: March → Sept
+            let txnCard1 = `<div class="card card-group"><h3>2025 Txn (Mar → Sept)</h3>`;
+            card2Cols.forEach(col => {
+                txnCard1 += `<p><strong>${col}:</strong> ${item[col] || ""}</p>`;
+            });
+            txnCard1 += `</div>`;
+            txnContainer.innerHTML += txnCard1;
+
+            // Txn Card 2: Oct → March 26
+            let txnCard2 = `<div class="card card-group"><h3>Oct → March 26</h3>`;
+            card3Cols.forEach(col => {
+                txnCard2 += `<p><strong>${col}:</strong> ${item[col] || ""}</p>`;
+            });
+            txnCard2 += `</div>`;
+            txnContainer.innerHTML += txnCard2;
+        }
+    });
+}
+</script>
+
+</body>
+</html>
