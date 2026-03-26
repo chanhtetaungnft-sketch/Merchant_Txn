@@ -3,188 +3,166 @@
 <head>
 <meta charset="UTF-8">
 <title>MMQR Txn Monitoring</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
 <style>
-/* Page background */
 body {
     font-family: Arial, sans-serif;
     background: #f8f9fa;
     padding: 40px;
 }
 
-/* Title */
 h1 {
     text-align: center;
     color: #333;
-    margin-bottom: 20px;
 }
 
-/* Search box */
+/* Search */
 #searchBox {
     display: block;
-    margin: 0 auto 20px auto;
+    margin: 20px auto;
     padding: 12px;
     width: 420px;
     font-size: 16px;
     border-radius: 12px;
     border: 1px solid rgba(0,0,0,0.15);
-    background: rgba(255,255,255,0.85);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    background: rgba(255,255,255,0.9);
 }
 
-/* CSV Upload - right bottom */
-#csvFile {
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    padding: 12px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.85);
-    border: 1px solid rgba(0,0,0,0.15);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-}
-
-/* Container for cards */
+/* Container */
 .container {
     max-width: 1400px;
     margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
 }
 
-/* Card common style */
-.card {
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(12px);
-    border-radius: 25px;
+/* Merchant Info */
+.merchant-card {
+    background: rgba(255,255,255,0.9);
+    border-radius: 20px;
     padding: 20px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-    transition: transform 0.3s, box-shadow 0.3s;
-    overflow-x: auto;
-}
-
-.card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 50px rgba(0,0,0,0.12);
-}
-
-.card h3 {
-    margin: 0 0 12px 0;
-    font-size: 20px;
-    color: #111;
-}
-
-.card p {
-    margin: 6px 0;
-    color: #111;
-    font-size: 15px;
-}
-
-/* Merchant info row */
-.merchant-info {
+    margin-bottom: 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
 }
 
-/* Txn months grid */
+/* Txn Grid */
 .txn-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 25px;
-    margin-top: 15px;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
 }
 
-/* Card group inside grid */
-.card-group {
+/* Txn Card */
+.card {
+    background: rgba(255,255,255,0.9);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card h3 {
     margin-bottom: 10px;
-    padding: 15px;
-    background: rgba(255,255,255,0.75);
-    border-radius: 18px;
-    min-width: 280px;
+}
+
+/* Scroll Animation */
+.fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {opacity:0; transform:translateY(10px);}
+    to {opacity:1; transform:translateY(0);}
 }
 </style>
 </head>
+
 <body>
 
 <h1>MMQR Txn Monitoring</h1>
 
-<!-- Search Box -->
-<input type="text" id="searchBox" placeholder="Enter full MID or Merchant Name" onkeyup="searchData()">
+<input type="text" id="searchBox" placeholder="Enter MID or Merchant Name">
 
-<!-- Cards Container -->
 <div class="container">
-    <div id="merchantCardContainer"></div>
-    <div class="txn-grid" id="txnCardsContainer"></div>
+    <div id="merchantInfo"></div>
+    <div class="txn-grid" id="txnData"></div>
 </div>
-
-<!-- CSV Upload -->
-<input type="file" id="csvFile" accept=".csv">
 
 <script>
 let sheetData = [];
 
-// Columns for each card
-const merchantCols = ["Merchant Name","MID","Portal Status","MDR Offus"];
-const card2Cols = ["March Count","March Vol","April Count","April Vol","May Count","May Vol","Jun Count","Jun Vol","July Count","July Vol","Aug Count","Aug Vol","Sept Count","Sept Vol"];
-const card3Cols = ["Oct Count","Oct Vol","Nov Count","Nov Vol","Dec Count","Dec Vol","Jan Count","Jan Vol","Feb Count","Feb Vol","March 26 Count","March 26 Vol"];
+// 🔗 Apps Script URL
+const API_URL = "https://script.google.com/macros/s/AKfycbxZsaOuZl_ry_tERX_3qVQYB5tiAe8hNpbl2qIBRZoscb2tPzP3H3DhODJIoE8fwn5f/exec";
 
-// CSV Upload
-document.getElementById("csvFile").addEventListener("change", function(e){
-    const file = e.target.files[0];
-    if(file){
-        Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results){
-                sheetData = results.data;
-                alert("CSV loaded! Now you can search by full MID or Merchant Name.");
-            }
-        });
-    }
+// Load data
+fetch(API_URL)
+.then(res => res.json())
+.then(data => {
+    sheetData = data;
+    console.log("Data loaded:", sheetData.length);
 });
 
-// Search function - full match
-function searchData(){
-    const keyword = document.getElementById("searchBox").value.trim().toLowerCase();
-    const merchantContainer = document.getElementById("merchantCardContainer");
-    const txnContainer = document.getElementById("txnCardsContainer");
-    merchantContainer.innerHTML = "";
-    txnContainer.innerHTML = "";
+// Search
+document.getElementById("searchBox").addEventListener("keyup", function(){
+    const keyword = this.value.trim().toLowerCase();
+
+    const merchantDiv = document.getElementById("merchantInfo");
+    const txnDiv = document.getElementById("txnData");
+
+    merchantDiv.innerHTML = "";
+    txnDiv.innerHTML = "";
+
     if(!keyword) return;
 
     sheetData.forEach(item => {
         const MID = (item["MID"] || "").toLowerCase();
-        const merchant = (item["Merchant Name"] || "").toLowerCase();
+        const name = (item["Merchant Name"] || "").toLowerCase();
 
-        if(MID === keyword || merchant === keyword){
-            // Merchant Info Card
-            let merchantCard = `<div class="card merchant-info">`;
-            merchantCols.forEach(col => {
-                merchantCard += `<p><strong>${col}:</strong> ${item[col] || ""}</p>`;
-            });
-            merchantCard += `</div>`;
-            merchantContainer.innerHTML += merchantCard;
+        if(MID === keyword || name === keyword){
 
-            // Txn Card 1: March → Sept
-            let txnCard1 = `<div class="card card-group"><h3>2025 Txn (Mar → Sept)</h3>`;
-            card2Cols.forEach(col => {
-                txnCard1 += `<p><strong>${col}:</strong> ${item[col] || ""}</p>`;
-            });
-            txnCard1 += `</div>`;
-            txnContainer.innerHTML += txnCard1;
+            // Merchant Info
+            merchantDiv.innerHTML = `
+            <div class="merchant-card fade-in">
+                <p><b>Merchant Name:</b> ${item["Merchant Name"] || ""}</p>
+                <p><b>MID:</b> ${item["MID"] || ""}</p>
+                <p><b>Portal Status:</b> ${item["Portal Status"] || ""}</p>
+                <p><b>MDR Offus:</b> ${item["MDR Offus"] || ""}</p>
+            </div>`;
 
-            // Txn Card 2: Oct → March 26
-            let txnCard2 = `<div class="card card-group"><h3>Oct → March 26</h3>`;
-            card3Cols.forEach(col => {
-                txnCard2 += `<p><strong>${col}:</strong> ${item[col] || ""}</p>`;
-            });
-            txnCard2 += `</div>`;
-            txnContainer.innerHTML += txnCard2;
+            // 2025 Txn
+            let txn1 = `
+            <div class="card fade-in">
+                <h3>2025 Txn</h3>
+                <p>March: ${item["March Count"]} / ${item["March Vol"]}</p>
+                <p>April: ${item["April Count"]} / ${item["April Vol"]}</p>
+                <p>May: ${item["May Count"]} / ${item["May Vol"]}</p>
+                <p>Jun: ${item["Jun Count"]} / ${item["Jun Vol"]}</p>
+                <p>July: ${item["July Count"]} / ${item["July Vol"]}</p>
+                <p>Aug: ${item["Aug Count"]} / ${item["Aug Vol"]}</p>
+                <p>Sept: ${item["Sept Count"]} / ${item["Sept Vol"]}</p>
+                <p>Oct: ${item["Oct Count"]} / ${item["Oct Vol"]}</p>
+                <p>Nov: ${item["Nov Count"]} / ${item["Nov Vol"]}</p>
+                <p>Dec: ${item["Dec Count"]} / ${item["Dec Vol"]}</p>
+            </div>`;
+
+            // 2026 Txn
+            let txn2 = `
+            <div class="card fade-in">
+                <h3>2026 Txn</h3>
+                <p>Jan: ${item["Jan Count"]} / ${item["Jan Vol"]}</p>
+                <p>Feb: ${item["Feb Count"]} / ${item["Feb Vol"]}</p>
+                <p>March 26: ${item["March 26 Count"]} / ${item["March 26 Vol"]}</p>
+            </div>`;
+
+            txnDiv.innerHTML = txn1 + txn2;
         }
     });
-}
+});
 </script>
 
 </body>
