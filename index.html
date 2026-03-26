@@ -27,8 +27,7 @@ h1 {
     width: 420px;
     border-radius: 14px;
     border: none;
-    background: rgba(255,255,255,0.85);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    background: rgba(255,255,255,0.9);
 }
 
 /* Suggestion */
@@ -39,7 +38,6 @@ h1 {
     border-radius: 10px;
     max-height: 200px;
     overflow-y: auto;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
 }
 
 .suggestion-item {
@@ -51,12 +49,11 @@ h1 {
     background: #f0f3f8;
 }
 
-/* Merchant Card */
+/* Merchant */
 .merchant-card {
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(12px);
-    border-radius: 20px;
+    background: rgba(255,255,255,0.8);
     padding: 20px;
+    border-radius: 15px;
     margin-bottom: 20px;
     display: flex;
     flex-wrap: wrap;
@@ -70,28 +67,23 @@ h1 {
     gap: 20px;
 }
 
-/* Cards */
+/* Card */
 .card {
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(15px);
-    border-radius: 20px;
+    background: rgba(255,255,255,0.85);
     padding: 20px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    border-radius: 15px;
     overflow-x: auto;
 }
 
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.table {
+/* Table */
+table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.table th, .table td {
+th, td {
     padding: 8px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #ddd;
     white-space: nowrap;
 }
 
@@ -117,10 +109,22 @@ let volumeChart, countChart;
 
 const API_URL = "https://script.google.com/macros/s/AKfycbxZsaOuZl_ry_tERX_3qVQYB5tiAe8hNpbl2qIBRZoscb2tPzP3H3DhODJIoE8fwn5f/exec";
 
-// Load Data
+// Load data
 fetch(API_URL)
 .then(res => res.json())
-.then(data => sheetData = data);
+.then(data => {
+    sheetData = data;
+    console.log("Loaded:", data.length);
+})
+.catch(err => {
+    alert("Data load error!");
+    console.error(err);
+});
+
+// Safe value
+function getVal(obj,key){
+    return obj[key] ? obj[key] : 0;
+}
 
 // Search + Suggestion
 const searchBox = document.getElementById("searchBox");
@@ -132,8 +136,8 @@ searchBox.addEventListener("keyup", function(){
 
     if(!keyword) return;
 
-    let matches = sheetData.filter(item => 
-        (item["Merchant Name"] || "").toLowerCase().startsWith(keyword)
+    let matches = sheetData.filter(item =>
+        (item["Merchant Name"]||"").toLowerCase().includes(keyword)
     ).slice(0,10);
 
     matches.forEach(item=>{
@@ -149,13 +153,6 @@ searchBox.addEventListener("keyup", function(){
 
         suggestionBox.appendChild(div);
     });
-
-    sheetData.forEach(item=>{
-        if((item["MID"]||"").toLowerCase()===keyword ||
-           (item["Merchant Name"]||"").toLowerCase()===keyword){
-            showResult(item);
-        }
-    });
 });
 
 // Show Result
@@ -163,48 +160,48 @@ function showResult(item){
 
 document.getElementById("merchantInfo").innerHTML = `
 <div class="merchant-card">
-<p><b>Merchant Name:</b> ${item["Merchant Name"]}</p>
-<p><b>MID:</b> ${item["MID"]}</p>
-<p><b>Portal Status:</b> ${item["Portal Status"]}</p>
-<p><b>MDR Offus:</b> ${item["MDR Offus"]}</p>
+<p><b>Merchant Name:</b> ${item["Merchant Name"]||""}</p>
+<p><b>MID:</b> ${item["MID"]||""}</p>
+<p><b>Portal Status:</b> ${item["Portal Status"]||""}</p>
+<p><b>MDR Offus:</b> ${item["MDR Offus"]||""}</p>
 </div>`;
 
 document.getElementById("txnData").innerHTML = `
 
 <div class="card">
 <h3>2025 Txn</h3>
-<table class="table">
+<table>
 <tr><th>Month</th><th>Count</th><th>Volume</th></tr>
-<tr><td>Mar</td><td>${item["March Count"]}</td><td>${item["March Vol"]}</td></tr>
-<tr><td>Apr</td><td>${item["April Count"]}</td><td>${item["April Vol"]}</td></tr>
-<tr><td>May</td><td>${item["May Count"]}</td><td>${item["May Vol"]}</td></tr>
-<tr><td>Jun</td><td>${item["Jun Count"]}</td><td>${item["Jun Vol"]}</td></tr>
-<tr><td>Jul</td><td>${item["July Count"]}</td><td>${item["July Vol"]}</td></tr>
-<tr><td>Aug</td><td>${item["Aug Count"]}</td><td>${item["Aug Vol"]}</td></tr>
-<tr><td>Sep</td><td>${item["Sept Count"]}</td><td>${item["Sept Vol"]}</td></tr>
-<tr><td>Oct</td><td>${item["Oct Count"]}</td><td>${item["Oct Vol"]}</td></tr>
-<tr><td>Nov</td><td>${item["Nov Count"]}</td><td>${item["Nov Vol"]}</td></tr>
-<tr><td>Dec</td><td>${item["Dec Count"]}</td><td>${item["Dec Vol"]}</td></tr>
+<tr><td>Mar</td><td>${getVal(item,"March Count")}</td><td>${getVal(item,"March Vol")}</td></tr>
+<tr><td>Apr</td><td>${getVal(item,"April Count")}</td><td>${getVal(item,"April Vol")}</td></tr>
+<tr><td>May</td><td>${getVal(item,"May Count")}</td><td>${getVal(item,"May Vol")}</td></tr>
+<tr><td>Jun</td><td>${getVal(item,"Jun Count")}</td><td>${getVal(item,"Jun Vol")}</td></tr>
+<tr><td>Jul</td><td>${getVal(item,"July Count")}</td><td>${getVal(item,"July Vol")}</td></tr>
+<tr><td>Aug</td><td>${getVal(item,"Aug Count")}</td><td>${getVal(item,"Aug Vol")}</td></tr>
+<tr><td>Sep</td><td>${getVal(item,"Sept Count")}</td><td>${getVal(item,"Sept Vol")}</td></tr>
+<tr><td>Oct</td><td>${getVal(item,"Oct Count")}</td><td>${getVal(item,"Oct Vol")}</td></tr>
+<tr><td>Nov</td><td>${getVal(item,"Nov Count")}</td><td>${getVal(item,"Nov Vol")}</td></tr>
+<tr><td>Dec</td><td>${getVal(item,"Dec Count")}</td><td>${getVal(item,"Dec Vol")}</td></tr>
 </table>
 </div>
 
 <div class="card">
 <h3>2026 Txn</h3>
-<table class="table">
+<table>
 <tr><th>Month</th><th>Count</th><th>Volume</th></tr>
-<tr><td>Jan</td><td>${item["Jan Count"]}</td><td>${item["Jan Vol"]}</td></tr>
-<tr><td>Feb</td><td>${item["Feb Count"]}</td><td>${item["Feb Vol"]}</td></tr>
-<tr><td>Mar26</td><td>${item["March 26 Count"]}</td><td>${item["March 26 Vol"]}</td></tr>
+<tr><td>Jan</td><td>${getVal(item,"Jan Count")}</td><td>${getVal(item,"Jan Vol")}</td></tr>
+<tr><td>Feb</td><td>${getVal(item,"Feb Count")}</td><td>${getVal(item,"Feb Vol")}</td></tr>
+<tr><td>Mar26</td><td>${getVal(item,"March 26 Count")}</td><td>${getVal(item,"March 26 Vol")}</td></tr>
 </table>
 </div>
 
 <div class="card">
-<h3>Txn Volume Trend</h3>
+<h3>Volume Trend</h3>
 <canvas id="volumeChart"></canvas>
 </div>
 
 <div class="card">
-<h3>Txn Count Trend</h3>
+<h3>Count Trend</h3>
 <canvas id="countChart"></canvas>
 </div>
 `;
@@ -218,18 +215,20 @@ function renderCharts(item){
 const months = ["Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar26"];
 
 const volumeData = [
-item["March Vol"],item["April Vol"],item["May Vol"],item["Jun Vol"],
-item["July Vol"],item["Aug Vol"],item["Sept Vol"],item["Oct Vol"],
-item["Nov Vol"],item["Dec Vol"],item["Jan Vol"],item["Feb Vol"],
-item["March 26 Vol"]
-].map(x=>Number(x)||0);
+getVal(item,"March Vol"),getVal(item,"April Vol"),getVal(item,"May Vol"),
+getVal(item,"Jun Vol"),getVal(item,"July Vol"),getVal(item,"Aug Vol"),
+getVal(item,"Sept Vol"),getVal(item,"Oct Vol"),getVal(item,"Nov Vol"),
+getVal(item,"Dec Vol"),getVal(item,"Jan Vol"),getVal(item,"Feb Vol"),
+getVal(item,"March 26 Vol")
+];
 
 const countData = [
-item["March Count"],item["April Count"],item["May Count"],item["Jun Count"],
-item["July Count"],item["Aug Count"],item["Sept Count"],item["Oct Count"],
-item["Nov Count"],item["Dec Count"],item["Jan Count"],item["Feb Count"],
-item["March 26 Count"]
-].map(x=>Number(x)||0);
+getVal(item,"March Count"),getVal(item,"April Count"),getVal(item,"May Count"),
+getVal(item,"Jun Count"),getVal(item,"July Count"),getVal(item,"Aug Count"),
+getVal(item,"Sept Count"),getVal(item,"Oct Count"),getVal(item,"Nov Count"),
+getVal(item,"Dec Count"),getVal(item,"Jan Count"),getVal(item,"Feb Count"),
+getVal(item,"March 26 Count")
+];
 
 if(volumeChart) volumeChart.destroy();
 if(countChart) countChart.destroy();
