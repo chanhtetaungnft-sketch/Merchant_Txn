@@ -6,71 +6,93 @@
 
 <style>
 body {
-    font-family: Arial, sans-serif;
-    background: #f8f9fa;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #eef2f7, #e3e9f2);
     padding: 40px;
 }
 
+/* Title */
 h1 {
     text-align: center;
-    color: #333;
+    color: #2c3e50;
+    margin-bottom: 20px;
 }
 
 /* Search */
 #searchBox {
     display: block;
     margin: 20px auto;
-    padding: 12px;
+    padding: 14px;
     width: 420px;
     font-size: 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(0,0,0,0.15);
-    background: rgba(255,255,255,0.9);
+    border-radius: 14px;
+    border: none;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 }
 
-/* Container */
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-/* Merchant Info */
+/* Merchant Card */
 .merchant-card {
-    background: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(15px);
     border-radius: 20px;
     padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 25px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
 }
 
 /* Txn Grid */
 .txn-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 25px;
 }
 
-/* Txn Card */
+/* Glass Card */
 .card {
-    background: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(18px);
     border-radius: 20px;
     padding: 20px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-    transition: 0.3s;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    transition: all 0.3s;
 }
 
 .card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 12px 50px rgba(0,0,0,0.15);
 }
 
+/* Card Title */
 .card h3 {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    color: #34495e;
 }
 
-/* Scroll Animation */
+/* Table */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    text-align: left;
+    padding: 8px;
+    font-size: 13px;
+    color: #666;
+}
+
+.table td {
+    padding: 8px;
+    font-size: 14px;
+    color: #222;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Animation */
 .fade-in {
     animation: fadeIn 0.6s ease-in-out;
 }
@@ -88,24 +110,18 @@ h1 {
 
 <input type="text" id="searchBox" placeholder="Enter MID or Merchant Name">
 
-<div class="container">
-    <div id="merchantInfo"></div>
-    <div class="txn-grid" id="txnData"></div>
-</div>
+<div id="merchantInfo"></div>
+<div class="txn-grid" id="txnData"></div>
 
 <script>
 let sheetData = [];
 
-// 🔗 Apps Script URL
 const API_URL = "https://script.google.com/macros/s/AKfycbxZsaOuZl_ry_tERX_3qVQYB5tiAe8hNpbl2qIBRZoscb2tPzP3H3DhODJIoE8fwn5f/exec";
 
 // Load data
 fetch(API_URL)
 .then(res => res.json())
-.then(data => {
-    sheetData = data;
-    console.log("Data loaded:", sheetData.length);
-});
+.then(data => sheetData = data);
 
 // Search
 document.getElementById("searchBox").addEventListener("keyup", function(){
@@ -128,38 +144,44 @@ document.getElementById("searchBox").addEventListener("keyup", function(){
             // Merchant Info
             merchantDiv.innerHTML = `
             <div class="merchant-card fade-in">
-                <p><b>Merchant Name:</b> ${item["Merchant Name"] || ""}</p>
-                <p><b>MID:</b> ${item["MID"] || ""}</p>
-                <p><b>Portal Status:</b> ${item["Portal Status"] || ""}</p>
-                <p><b>MDR Offus:</b> ${item["MDR Offus"] || ""}</p>
+                <p><b>Merchant Name:</b> ${item["Merchant Name"]}</p>
+                <p><b>MID:</b> ${item["MID"]}</p>
+                <p><b>Portal Status:</b> ${item["Portal Status"]}</p>
+                <p><b>MDR Offus:</b> ${item["MDR Offus"]}</p>
             </div>`;
 
-            // 2025 Txn
-            let txn1 = `
+            // 2025 Table
+            let txn2025 = `
             <div class="card fade-in">
                 <h3>2025 Txn</h3>
-                <p>March: ${item["March Count"]} / ${item["March Vol"]}</p>
-                <p>April: ${item["April Count"]} / ${item["April Vol"]}</p>
-                <p>May: ${item["May Count"]} / ${item["May Vol"]}</p>
-                <p>Jun: ${item["Jun Count"]} / ${item["Jun Vol"]}</p>
-                <p>July: ${item["July Count"]} / ${item["July Vol"]}</p>
-                <p>Aug: ${item["Aug Count"]} / ${item["Aug Vol"]}</p>
-                <p>Sept: ${item["Sept Count"]} / ${item["Sept Vol"]}</p>
-                <p>Oct: ${item["Oct Count"]} / ${item["Oct Vol"]}</p>
-                <p>Nov: ${item["Nov Count"]} / ${item["Nov Vol"]}</p>
-                <p>Dec: ${item["Dec Count"]} / ${item["Dec Vol"]}</p>
+                <table class="table">
+                    <tr><th>Month</th><th>Count</th><th>Volume</th></tr>
+                    <tr><td>March</td><td>${item["March Count"]}</td><td>${item["March Vol"]}</td></tr>
+                    <tr><td>April</td><td>${item["April Count"]}</td><td>${item["April Vol"]}</td></tr>
+                    <tr><td>May</td><td>${item["May Count"]}</td><td>${item["May Vol"]}</td></tr>
+                    <tr><td>Jun</td><td>${item["Jun Count"]}</td><td>${item["Jun Vol"]}</td></tr>
+                    <tr><td>July</td><td>${item["July Count"]}</td><td>${item["July Vol"]}</td></tr>
+                    <tr><td>Aug</td><td>${item["Aug Count"]}</td><td>${item["Aug Vol"]}</td></tr>
+                    <tr><td>Sept</td><td>${item["Sept Count"]}</td><td>${item["Sept Vol"]}</td></tr>
+                    <tr><td>Oct</td><td>${item["Oct Count"]}</td><td>${item["Oct Vol"]}</td></tr>
+                    <tr><td>Nov</td><td>${item["Nov Count"]}</td><td>${item["Nov Vol"]}</td></tr>
+                    <tr><td>Dec</td><td>${item["Dec Count"]}</td><td>${item["Dec Vol"]}</td></tr>
+                </table>
             </div>`;
 
-            // 2026 Txn
-            let txn2 = `
+            // 2026 Table
+            let txn2026 = `
             <div class="card fade-in">
                 <h3>2026 Txn</h3>
-                <p>Jan: ${item["Jan Count"]} / ${item["Jan Vol"]}</p>
-                <p>Feb: ${item["Feb Count"]} / ${item["Feb Vol"]}</p>
-                <p>March 26: ${item["March 26 Count"]} / ${item["March 26 Vol"]}</p>
+                <table class="table">
+                    <tr><th>Month</th><th>Count</th><th>Volume</th></tr>
+                    <tr><td>Jan</td><td>${item["Jan Count"]}</td><td>${item["Jan Vol"]}</td></tr>
+                    <tr><td>Feb</td><td>${item["Feb Count"]}</td><td>${item["Feb Vol"]}</td></tr>
+                    <tr><td>March 26</td><td>${item["March 26 Count"]}</td><td>${item["March 26 Vol"]}</td></tr>
+                </table>
             </div>`;
 
-            txnDiv.innerHTML = txn1 + txn2;
+            txnDiv.innerHTML = txn2025 + txn2026;
         }
     });
 });
